@@ -1,0 +1,14 @@
+<h1 mat-dialog-title>Register server</h1>
+<div mat-dialog-content>
+  <p>Type name and url of new server.</p>
+  <mat-form-field>
+    <input matInput [(ngModel)]="data.name">
+  </mat-form-field>
+  <mat-form-field>
+    <input matInput [(ngModel)]="data.url">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Register</button>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+</div>

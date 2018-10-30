@@ -3,9 +3,12 @@
   <h1>
     Welcome to {{ title }}!
   </h1>
-  <button (click)="launchWindow()">Launch a Window</button>
+  <button mat-fab (click)="launchWindow()" matTooltip="Agens Homepage" matTooltipPosition="below">
+    <mat-icon>home</mat-icon></button>
+  <button mat-fab color="primary" (click)="openDialogRegister()" matTooltip="Register server" matTooltipPosition="below">
+    <mat-icon>add</mat-icon></button>
 </div>
-<h2>Here are some links to help you start: </h2>
+<h2>server list: </h2>
 <mat-card class="example-card">
   <mat-card-header>
     <div mat-card-avatar class="example-header-image"></div>
@@ -21,8 +24,8 @@
     </p>
   </mat-card-content>
   <mat-card-actions>
-    <button mat-button>Connect</button>
-    <button mat-button>Delete</button>
+    <button mat-button (click)="launchWindow()">Connect</button>
+    <button mat-button (click)="openDialogDelete()">Delete</button>
   </mat-card-actions>
 </mat-card>
 
