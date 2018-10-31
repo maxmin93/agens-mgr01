@@ -6,3 +6,26 @@
   background-image: url('../assets/images/server_on.png');
   background-size: cover;
 }
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+li {
+  float: left;
+  margin: 5px 5px 5px 5px;
+}
+
+li mat-card {
+  display: block;
+  text-align: center;
+  padding: 16px;
+  text-decoration: none;
+}
+
+li mat-card:hover {
+  background-color: #F0F8FF;
+}

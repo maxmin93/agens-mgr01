@@ -8,24 +8,29 @@
   <button mat-fab color="primary" (click)="openDialogRegister()" matTooltip="Register server" matTooltipPosition="below">
     <mat-icon>add</mat-icon></button>
 </div>
-<h2>server list: </h2>
-<mat-card class="example-card">
-  <mat-card-header>
-    <div mat-card-avatar class="example-header-image"></div>
-    <mat-card-title>Shiba Inu</mat-card-title>
-    <mat-card-subtitle>Dog Breed</mat-card-subtitle>
-  </mat-card-header>
-  <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu">
-  <mat-card-content>
-    <p>
-      The Shiba Inu is the smallest of the six original and distinct spitz breeds of dog from Japan.
-      A small, agile dog that copes very well with mountainous terrain, the Shiba Inu was originally
-      bred for hunting.
-    </p>
-  </mat-card-content>
-  <mat-card-actions>
-    <button mat-button (click)="launchWindow()">Connect</button>
-    <button mat-button (click)="openDialogDelete()">Delete</button>
-  </mat-card-actions>
-</mat-card>
+<div><hr /></div>
+<ul>
+  <li *ngFor="let item of servers; let i = index">
+    <mat-card class="example-card">
+      <mat-card-header>
+        <div mat-card-avatar class="example-header-image"></div>
+        <mat-card-title>{{ item.name }}</mat-card-title>
+        <mat-card-subtitle>{{ item.url }}</mat-card-subtitle>
+      </mat-card-header>
+      <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu">
+      <mat-card-content>
+        <p>
+          <span *ngIf="item['datasource']">{{ parseJdbcUrl(item['datasource']['jdbc_url']) }}</span><br>
+          <span *ngIf="item['datasource']">{{ item['datasource']['name'] }}</span><br>
+          <span *ngIf="item['datasource']">{{ item['datasource']['desc'] }}</span><br>
+          <span *ngIf="item['message']">{{ item['message'] }}</span><br>
+        </p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button (click)="connectItem(item)">Connect</button>
+        <button mat-button (click)="openDialogDelete(item)">Delete</button>
+      </mat-card-actions>
+    </mat-card>
+  </li>
+</ul>
 

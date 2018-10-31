@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { FsService } from 'ngx-fs';
 
+import { Observable, Subject } from 'rxjs';
+
 const config_path = './agens-manager.json';
 
 @Injectable({
@@ -8,7 +10,13 @@ const config_path = './agens-manager.json';
 })
 export class LocalConfigService {
 
-  data: any = { "name": 'agens-manager01', "servers": [] };
+  state$:Subject<string> = new Subject();
+  data: any = { "name": 'agens-manager01'
+              , "servers": [
+                { "name": 'agens01', "url": 'http://localhost:8085' }
+                , { "name": 'agens02', "url": 'http://localhost:8085' }
+                // , { "name": 'agens03', "url": 'http://localhost:8085' }
+              ] };
   fs: any;
 
   constructor(
@@ -17,8 +25,17 @@ export class LocalConfigService {
     // if run by `ng serve`, fs is null (because not run by nodejs)
     this.fs = this._fsService.fs;
     // the _FsService contents is described here https://nodejs.org/api/fs.html
-    if( this.fs ) this.readConfig();
-    else console.log('ERROR: fs cannot be loding!!');
+    setTimeout(()=>{
+      if( this.fs ) this.readConfig();    
+      else{
+        console.log('ERROR: fs cannot be loding!!', this.data);
+        this.state$.next('test');
+      }
+    }, 100);
+  }
+
+  init(){
+    return this.state$;
   }
 
   readConfig() {
@@ -29,6 +46,7 @@ export class LocalConfigService {
         this.fs.readFile( config_path, ( error, data ) => {
           if ( error ) throw error;
           this.data = JSON.parse( data );
+          this.state$.next('ready');
           console.log( this.data );
         } );
       }
@@ -39,6 +57,7 @@ export class LocalConfigService {
           "utf-8",
           (err) => {
             if (err) throw err
+            this.state$.next('init');
             console.log("fs: config init!")
           }
         );
@@ -60,6 +79,7 @@ export class LocalConfigService {
       this.fs.writeFile( config_path, JSON.stringify( this.data ), "utf-8",
         (err) => {
           if (err) throw err
+          this.state$.next('saved');
           console.log(`fs: config is saved with '${key}'`);
         }
       );

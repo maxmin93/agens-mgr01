@@ -1,1 +1,1 @@
-{"name":"agens-manager01","servers":[]}
+{"name":"agens-manager01","servers":[{"name":"server02","url":"http://localhost:8085","index":1,"datasource":{"jdbc_url":"","schema":"","desc":""},"message":"","update_dt":"2018-10-31T06:51:06.925Z"},{"name":"server3","url":"http://localhost:8085","index":2,"datasource":{"jdbc_url":"","schema":"","desc":""},"message":"","update_dt":"2018-10-31T06:51:06.925Z"}]}

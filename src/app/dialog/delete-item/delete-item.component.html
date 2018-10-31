@@ -1,8 +1,8 @@
-<h1 mat-dialog-title>Delete server</h1>
+<h1 mat-dialog-title>Delete confirm</h1>
 <div mat-dialog-content>
-  <p>Are you sure delete this server: : {{data.name}}</p>
+  <p>Are you sure delete this: "{{data.name}}"</p>
   <mat-form-field>
-    <input matInput [(ngModel)]="data.url" readonly="true">
+    <input matInput placeholder="server url" [(ngModel)]="data.url" readonly="true">
   </mat-form-field>
 </div>
 <div mat-dialog-actions>

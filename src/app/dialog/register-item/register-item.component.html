@@ -2,10 +2,10 @@
 <div mat-dialog-content>
   <p>Type name and url of new server.</p>
   <mat-form-field>
-    <input matInput [(ngModel)]="data.name">
+    <input matInput placeholder="server name" [(ngModel)]="data.name" required>
   </mat-form-field>
   <mat-form-field>
-    <input matInput [(ngModel)]="data.url">
+    <input matInput placeholder="server url" [(ngModel)]="data.url" required>
   </mat-form-field>
 </div>
 <div mat-dialog-actions>

@@ -5,6 +5,7 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 export interface ItemData {
   url: string;
   name: string;
+  index: number;
 }
 
 @Component({
