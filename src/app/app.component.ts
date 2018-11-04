@@ -81,7 +81,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       item['index'] = i++;
       item['datasource'] = { "jdbc_url": '', "name": '', "desc": '', };
       item['message'] = "";
-      item['update_dt'] = undefined;
+      item['normal'] = false;
 
       this.updateItem(item);
     });
@@ -157,7 +157,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       console.log( x );
       item['datasource'] = x.hasOwnProperty('datasource') ? x['datasource'] : {};
       item['message'] = x.hasOwnProperty('message') ? x['message'] : {};
-      item['update_dt'] = new Date();
+      item['normal'] = true;
     },
     err => {
       // this.showMessage('ERROR', err.message);

@@ -16,7 +16,7 @@
   <li *ngFor="let item of servers; let i = index">
     <mat-card class="example-card">
       <mat-card-header>
-        <div mat-card-avatar [ngClass]="{ 'server-image-normal': !!item['update_dt'], 'server-image-error': !item['update_dt'] }"></div>
+        <div mat-card-avatar [ngClass]="{ 'server-image-normal': item['normal'], 'server-image-error': !item['normal'] }"></div>
         <mat-card-title>{{ item.name }}</mat-card-title>
         <mat-card-subtitle>{{ item.url }}</mat-card-subtitle>
       </mat-card-header>
