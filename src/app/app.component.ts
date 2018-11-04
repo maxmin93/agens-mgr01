@@ -7,8 +7,8 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { ElectronService } from 'ngx-electron';
 import { LocalConfigService } from './services/local-config.service';
 
-import { Observable, Subject, Subscription } from 'rxjs';
-import { tap, map, filter, concatAll, share } from 'rxjs/operators';
+import { Observable, Subject, Subscription, interval } from 'rxjs';
+import { tap, map, filter, concatAll, share, takeWhile } from 'rxjs/operators';
 
 import { RegisterItemComponent } from './dialog/register-item/register-item.component';
 import { DeleteItemComponent } from './dialog/delete-item/delete-item.component';
@@ -22,6 +22,10 @@ import { DeleteItemComponent } from './dialog/delete-item/delete-item.component'
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, AfterViewInit {
+
+  state:string = 'loading';
+  timer_max = 1.0;
+  timer_curr = 0;
 
   state$:Subject<string>;
   title = 'AgensManager';
@@ -45,12 +49,23 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.state$.subscribe(x => {
       console.log('config state$:', x);
-      if( x == 'ready' || x == 'test' ) this.updateData();
+      this.state = x;
+      if( x == 'ready' || x == 'test' ){     
+        this.timer_curr = this.timer_max;   
+        this.updateData();
+      } 
     });
   }
 
   ngAfterViewInit(){
     // this.getMeta(this.servers[0]);
+
+    let spinner:Observable<number> = interval(100);   
+    spinner.pipe(
+      takeWhile(_ => this.timer_curr < this.timer_max ),
+      tap(i => this.timer_curr += 0.1)
+    )
+    .subscribe( val => console.log(val) );
   }
 
   showMessage(state:string, message:string) {
@@ -64,6 +79,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.servers = [...this._config.get('servers')];
     this.servers.forEach(item => {
       item['index'] = i++;
+      item['datasource'] = { "jdbc_url": '', "name": '', "desc": '', };
+      item['message'] = "";
+      item['update_dt'] = undefined;
+
       this.updateItem(item);
     });
 
@@ -71,6 +90,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       this.showMessage('DONE', `loading server list (size=${this.servers.length})`);
     });    
   }
+
   ////////////////////////////////////////////////////////////
 
   openDialogRegister(): void {
@@ -140,10 +160,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       item['update_dt'] = new Date();
     },
     err => {
-      item['datasource'] = { "jdbc_url": '', "name": '', "desc": '', };
-      item['message'] = "";
-      item['update_dt'] = new Date();
-      this.showMessage('ERROR', err.message);
+      // this.showMessage('ERROR', err.message);
     },
     () => {
       this._cd.detectChanges();
@@ -151,7 +168,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   parseJdbcUrl(url:string){
-    if( !url || url.length == 0 ) return '(unknown)';
+    if( !url || url.length == 0 ) return '(not available)';
     let start = url.lastIndexOf('/');
     let end = url.lastIndexOf('?');
     return (start > 0) ? url.substring(start+1, (end > start) ? end : url.length) : url;

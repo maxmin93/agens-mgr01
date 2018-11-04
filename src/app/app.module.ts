@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
 
 import { NgxElectronModule } from 'ngx-electron';
-import  {NgxFsModule } from 'ngx-fs';
+import { NgxFsModule } from 'ngx-fs';
 
 import { HttpClientModule } from '@angular/common/http';
 
@@ -20,6 +20,8 @@ import {
   MatSliderModule, MatSlideToggleModule, MatSnackBarModule, MatSortModule, MatStepperModule,
   MatTableModule, MatTabsModule, MatToolbarModule, MatTooltipModule, MatTreeModule
 } from '@angular/material';
+
+import { RoundProgressModule } from 'angular-svg-round-progressbar';
 
 import { LocalConfigService } from './services/local-config.service';
 
@@ -54,6 +56,8 @@ import { DeleteItemComponent } from './dialog/delete-item/delete-item.component'
     MatProgressBarModule, MatProgressSpinnerModule, MatRadioModule, MatRippleModule, MatSelectModule,
     MatSidenavModule, MatSliderModule, MatSlideToggleModule, MatSnackBarModule, MatSortModule,
     MatTableModule, MatTabsModule, MatToolbarModule, MatTooltipModule, MatTreeModule,
+
+    RoundProgressModule
   ],
   providers: [
     LocalConfigService

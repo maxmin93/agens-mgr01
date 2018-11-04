@@ -9,19 +9,21 @@
     <mat-icon>add</mat-icon></button>
 </div>
 <div><hr /></div>
-<ul>
+<div class="progress-wrapper" *ngIf="state == 'loading'">
+  <round-progress [max]="timer_max" [current]="timer_curr" [radius]="100" [stroke]="25"></round-progress>
+</div>
+<ul *ngIf="state != 'loading'">
   <li *ngFor="let item of servers; let i = index">
     <mat-card class="example-card">
       <mat-card-header>
-        <div mat-card-avatar class="example-header-image"></div>
+        <div mat-card-avatar [ngClass]="{ 'server-image-normal': !!item['update_dt'], 'server-image-error': !item['update_dt'] }"></div>
         <mat-card-title>{{ item.name }}</mat-card-title>
         <mat-card-subtitle>{{ item.url }}</mat-card-subtitle>
       </mat-card-header>
       <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu">
       <mat-card-content>
         <p>
-          <span *ngIf="item['datasource']">{{ parseJdbcUrl(item['datasource']['jdbc_url']) }}</span><br>
-          <span *ngIf="item['datasource']">{{ item['datasource']['name'] }}</span><br>
+          <span *ngIf="item['datasource']">{{ parseJdbcUrl(item['datasource']['jdbc_url']) }}/{{ item['datasource']['name'] }}</span><br>
           <span *ngIf="item['datasource']">{{ item['datasource']['desc'] }}</span><br>
           <span *ngIf="item['message']">{{ item['message'] }}</span><br>
         </p>

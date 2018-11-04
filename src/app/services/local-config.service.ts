@@ -31,7 +31,7 @@ export class LocalConfigService {
         console.log('ERROR: fs cannot be loding!!', this.data);
         this.state$.next('test');
       }
-    }, 100);
+    }, 500);
   }
 
   init(){

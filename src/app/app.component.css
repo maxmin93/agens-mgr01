@@ -2,7 +2,15 @@
   max-width: 300px;
 }
 
-.example-header-image {
+.server-image-normal {
+  background-image: url('../assets/images/server_on.png');
+  background-size: cover;
+}
+.server-image-error {
+  background-image: url('../assets/images/server_off.png');
+  background-size: cover;
+}
+.server-image-off {
   background-image: url('../assets/images/server_on.png');
   background-size: cover;
 }
@@ -28,4 +36,14 @@ li mat-card {
 
 li mat-card:hover {
   background-color: #F0F8FF;
+}
+
+.progress-wrapper {
+  position: relative;
+  margin: 20px auto;
+  font-size: 20px;
+}
+
+round-progress { 
+  margin: auto;
 }
