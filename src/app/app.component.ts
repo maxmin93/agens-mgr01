@@ -85,7 +85,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   showMessage(state:string, message:string) {
-    this._msg.open(message, state, { duration: 4000, });
+    setTimeout(()=>{
+      this._msg.open(message, state, { duration: 2500, });
+    }, 100);
   }
 
   private closeHandlers(){
@@ -185,9 +187,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.handlers_health.push( this.updateItem(item) );
     });
 
-    Promise.resolve(null).then(()=>{
-      this.showMessage('DONE', `loading server list (size=${this.servers.length})`);
-    });    
+    // Promise.resolve(null).then(()=>{
+    //   this.showMessage('DONE', `loading server list (size=${this.servers.length})`);
+    // });    
   }
 
   updateItem(item:any):Subscription{

@@ -13,9 +13,8 @@ export class LocalConfigService {
   state$:Subject<string> = new Subject();
   data: any = { "name": 'agens-manager01'
               , "servers": [
-                { "name": 'agens01', "url": 'http://localhost:8085' }
+                { "name": 'agens01', "url": 'http://localhost:8084' }
                 , { "name": 'agens02', "url": 'http://localhost:8085' }
-                // , { "name": 'agens03', "url": 'http://localhost:8085' }
               ] };
   fs: any;
 

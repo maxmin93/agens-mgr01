@@ -22,8 +22,8 @@
         <mat-card-title>{{ item.name }}</mat-card-title>
         <mat-card-subtitle>{{ item.url }}</mat-card-subtitle>
       </mat-card-header>
-      <img *ngIf="item['state']=='normal'" mat-card-image src="../assets/images/graph_sample.png" alt="Photo of a Shiba Inu">
-      <img *ngIf="item['state']!='normal'" mat-card-image src="../assets/images/service_not_available.jpg" alt="service not available">
+      <img *ngIf="item['state']=='normal'" mat-card-image src="assets/images/graph_sample.png" alt="meta-graph">
+      <img *ngIf="item['state']!='normal'" mat-card-image src="assets/images/service_not_available.jpg" alt="service not available">
       <mat-card-content>
         <p>
           <span *ngIf="item['state']=='normal'">{{ parseJdbcUrl(item['datasource']) }}</span><br>
