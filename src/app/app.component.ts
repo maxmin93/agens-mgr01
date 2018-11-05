@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams, HttpRequest } from '@angular/common/http';
 
 import { MatSnackBar } from '@angular/material';
@@ -7,8 +7,8 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { ElectronService } from 'ngx-electron';
 import { LocalConfigService } from './services/local-config.service';
 
-import { Observable, Subject, Subscription, interval } from 'rxjs';
-import { tap, map, filter, concatAll, share, takeWhile } from 'rxjs/operators';
+import { Observable, Subject, Subscription, interval, of } from 'rxjs';
+import { tap, map, filter, concatAll, share, takeWhile, timeout, catchError } from 'rxjs/operators';
 
 import { RegisterItemComponent } from './dialog/register-item/register-item.component';
 import { DeleteItemComponent } from './dialog/delete-item/delete-item.component';
@@ -21,15 +21,17 @@ import { DeleteItemComponent } from './dialog/delete-item/delete-item.component'
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   state:string = 'loading';
   timer_max = 1.0;
   timer_curr = 0;
+  handler_timer:Subscription;
 
   state$:Subject<string>;
   title = 'AgensManager';
   servers = [];
+  handlers_health:Subscription[] = [];
 
   selected_item: any;
   item_name: string;
@@ -51,8 +53,14 @@ export class AppComponent implements OnInit, AfterViewInit {
       console.log('config state$:', x);
       this.state = x;
       if( x == 'ready' || x == 'test' ){     
-        this.timer_curr = this.timer_max;   
-        this.updateData();
+        this.timer_curr = this.timer_max;
+        if( this.handler_timer ){
+          this.handler_timer.unsubscribe();
+          this.handler_timer = undefined;
+        }
+
+        this.updateData();        // load server-list
+        this.checker_start();     // health-checker start!!
       } 
     });
   }
@@ -60,35 +68,51 @@ export class AppComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(){
     // this.getMeta(this.servers[0]);
 
-    let spinner:Observable<number> = interval(100);   
-    spinner.pipe(
+    let spinner$:Observable<number> = interval(100);
+    this.handler_timer = spinner$.pipe(
       takeWhile(_ => this.timer_curr < this.timer_max ),
       tap(i => this.timer_curr += 0.1)
     )
-    .subscribe( val => console.log(val) );
+    .subscribe();
+  }
+
+  ngOnDestroy(){
+    this.closeHandlers();
+    if( this.handler_timer ){
+      this.handler_timer.unsubscribe();
+      this.handler_timer = undefined;
+    }
   }
 
   showMessage(state:string, message:string) {
     this._msg.open(message, state, { duration: 4000, });
   }
 
-  updateData(){
-    this.title = this._config.get('name');
-
-    let i = 0;
-    this.servers = [...this._config.get('servers')];
-    this.servers.forEach(item => {
-      item['index'] = i++;
-      item['datasource'] = { "jdbc_url": '', "name": '', "desc": '', };
-      item['message'] = "";
-      item['normal'] = false;
-
-      this.updateItem(item);
+  private closeHandlers(){
+    this.handlers_health.forEach(x => {
+      if( x ) x.unsubscribe();
     });
+    this.handlers_health = [];
+  }
 
-    Promise.resolve(null).then(()=>{
-      this.showMessage('DONE', `loading server list (size=${this.servers.length})`);
-    });    
+  reloadList(){
+    this.state = 'loading';
+    this._config.readConfig();
+    this.showMessage('INFO', `Wait until loading server list ...!`);
+  }
+
+  checker_start(){
+    let checker$:Observable<number> = interval(1000*this.servers.length + 1000);
+    this.handler_timer = checker$.pipe(
+      takeWhile(_ => ['ready','test'].includes(this.state) ),
+    )
+    .subscribe( val => {
+      // console.log( '** health checker: '+val);
+      this.servers.forEach(item => {
+        this.handlers_health[item['index']] = this.updateItem(item);
+      });
+      this._cd.detectChanges();
+    });
   }
 
   ////////////////////////////////////////////////////////////
@@ -106,11 +130,12 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.showMessage('WARNING', 'server name or url is empty. try again.');
         return;
       }
+      this.state = 'loading';
 
       this.servers.push(result);
       this._cd.detectChanges();
 
-      this._config.writeConfig('servers', this.servers);
+      this._config.writeConfig('servers', this.servers, () => this.reloadList() );
       this.showMessage('INFO', `server "${result.name}" was registered.`);
     });
   }
@@ -124,11 +149,12 @@ export class AppComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       console.log('The delete dialog was closed:', result);
       if( !result ) return;
+      this.state = 'loading';
 
       this.servers.splice(result.index,1);
       this._cd.detectChanges();
 
-      this._config.writeConfig('servers', this.servers);
+      this._config.writeConfig('servers', this.servers, () => this.reloadList() );
       this.showMessage('INFO', `server "${result.name}" was deregistered.`);
     });
   }
@@ -143,7 +169,28 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   ////////////////////////////////////////////////////////////////
 
-  updateItem(item:any){
+  updateData(){
+    this.closeHandlers();
+
+    this.title = this._config.get('name');   
+    this.servers = [...this._config.get('servers')];
+
+    let i = 0;
+    this.servers.forEach(item => {
+      item['index'] = i++;
+      item['datasource'] = { "jdbc_url": '', "name": '', "desc": '', };
+      item['message'] = "";
+      item['state'] = 'off';
+
+      this.handlers_health.push( this.updateItem(item) );
+    });
+
+    Promise.resolve(null).then(()=>{
+      this.showMessage('DONE', `loading server list (size=${this.servers.length})`);
+    });    
+  }
+
+  updateItem(item:any):Subscription{
     if( !item || !item.url ) return;
 
     const api = `${item.url}/api/core/schema`;
@@ -151,26 +198,43 @@ export class AppComponent implements OnInit, AfterViewInit {
         headers: new HttpHeaders({ 
           'Content-Type': 'application/json', 'Authorization': '1234567890' })
         })
-        .pipe( concatAll(), filter(x => x.hasOwnProperty('group') && x['group'] == 'schema') );
+        .pipe( 
+          timeout(1000),
+          catchError(e => {
+            // 서버 무응답 ==> status: 0, statusText: "Unknown Error"
+            return of([{ group: "schema", state: "off", datasource: undefined,
+                        message: `server '${item.name}' is not ready (off)` }]);
+          }),
+          concatAll(), 
+          filter(x => x.hasOwnProperty('group') && x['group'] == 'schema')
+        );
 
-    info$.subscribe(x => {
-      console.log( x );
-      item['datasource'] = x.hasOwnProperty('datasource') ? x['datasource'] : {};
-      item['message'] = x.hasOwnProperty('message') ? x['message'] : {};
-      item['normal'] = true;
+    let handler:Subscription = info$.subscribe(x => {
+      // console.log( x );
+      item['datasource'] = x.hasOwnProperty('datasource') ? x['datasource'] : undefined;
+      item['message'] = x.hasOwnProperty('message') ? x['message'] : JSON.stringify(x);
+      if( x['state'] == 'SUCCESS' ) item['state'] = 'normal';
+      else if( x['state'] == 'PENDING') item['state'] = 'error';
+      else item['state'] = 'off';
     },
     err => {
-      // this.showMessage('ERROR', err.message);
+      console.log( 'ERROR:', item, err );
+      item['datasource'] = undefined;
+      item['message'] = `ERROR: ${err.message}`;
+      item['state'] = 'off';
     },
     () => {
       this._cd.detectChanges();
     });
+
+    return handler;
   }
 
-  parseJdbcUrl(url:string){
-    if( !url || url.length == 0 ) return '(not available)';
-    let start = url.lastIndexOf('/');
-    let end = url.lastIndexOf('?');
-    return (start > 0) ? url.substring(start+1, (end > start) ? end : url.length) : url;
+  parseJdbcUrl( ds:any ){
+    if( !ds['jdbc_url'] || ds['jdbc_url'].length == 0 ) return '(not available)';
+    let start = ds['jdbc_url'].lastIndexOf('/');
+    let end = ds['jdbc_url'].lastIndexOf('?');
+    let dbName = (start > 0) ? ds['jdbc_url'].substring(start+1, (end > start) ? end : ds['jdbc_url'].length) : ds['jdbc_url'];
+    return dbName + '/' + ds['name'];
   }
 }

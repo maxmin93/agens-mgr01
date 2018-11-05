@@ -7,6 +7,8 @@
     <mat-icon>home</mat-icon></button>
   <button mat-fab color="primary" (click)="openDialogRegister()" matTooltip="Register server" matTooltipPosition="below">
     <mat-icon>add</mat-icon></button>
+  <button mat-fab color="#03DAC5" (click)="reloadList()" matTooltip="Reload list" matTooltipPosition="below">
+    <mat-icon>autorenew</mat-icon></button>
 </div>
 <div><hr /></div>
 <div class="progress-wrapper" *ngIf="state == 'loading'">
@@ -16,15 +18,16 @@
   <li *ngFor="let item of servers; let i = index">
     <mat-card class="example-card">
       <mat-card-header>
-        <div mat-card-avatar [ngClass]="{ 'server-image-normal': item['normal'], 'server-image-error': !item['normal'] }"></div>
+        <div mat-card-avatar [ngClass]="{ 'server-image-off': item['state']=='off', 'server-image-normal': item['state']=='normal', 'server-image-error': item['state']=='error' }"></div>
         <mat-card-title>{{ item.name }}</mat-card-title>
         <mat-card-subtitle>{{ item.url }}</mat-card-subtitle>
       </mat-card-header>
-      <img mat-card-image src="https://material.angular.io/assets/img/examples/shiba2.jpg" alt="Photo of a Shiba Inu">
+      <img *ngIf="item['state']=='normal'" mat-card-image src="../assets/images/graph_sample.png" alt="Photo of a Shiba Inu">
+      <img *ngIf="item['state']!='normal'" mat-card-image src="../assets/images/service_not_available.jpg" alt="service not available">
       <mat-card-content>
         <p>
-          <span *ngIf="item['datasource']">{{ parseJdbcUrl(item['datasource']['jdbc_url']) }}/{{ item['datasource']['name'] }}</span><br>
-          <span *ngIf="item['datasource']">{{ item['datasource']['desc'] }}</span><br>
+          <span *ngIf="item['state']=='normal'">{{ parseJdbcUrl(item['datasource']) }}</span><br>
+          <span *ngIf="item['state']=='normal'">{{ item['datasource']['desc'] }}</span><br>
           <span *ngIf="item['message']">{{ item['message'] }}</span><br>
         </p>
       </mat-card-content>

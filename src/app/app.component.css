@@ -2,16 +2,20 @@
   max-width: 300px;
 }
 
-.server-image-normal {
+.server-image-online {
   background-image: url('../assets/images/server_on.png');
+  background-size: cover;
+}
+.server-image-normal {
+  background-image: url('../assets/images/server.png');
   background-size: cover;
 }
 .server-image-error {
-  background-image: url('../assets/images/server_off.png');
+  background-image: url('../assets/images/server_error.png');
   background-size: cover;
 }
 .server-image-off {
-  background-image: url('../assets/images/server_on.png');
+  background-image: url('../assets/images/server_off.png');
   background-size: cover;
 }
 

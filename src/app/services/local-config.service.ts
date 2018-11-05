@@ -73,7 +73,7 @@ export class LocalConfigService {
   }
 
   // 무조건 쓴다 (동기화 따위는 없다)
-  writeConfig(key:string, val:any){
+  writeConfig(key:string, val:any, callback:Function = undefined){
     this.data[key] = val;
     if( this.fs ){
       this.fs.writeFile( config_path, JSON.stringify( this.data ), "utf-8",
@@ -81,6 +81,8 @@ export class LocalConfigService {
           if (err) throw err
           this.state$.next('saved');
           console.log(`fs: config is saved with '${key}'`);
+
+          if( callback ) callback();
         }
       );
     }
