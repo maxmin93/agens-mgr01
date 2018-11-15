@@ -19,16 +19,20 @@
     <mat-card class="example-card">
       <mat-card-header>
         <div mat-card-avatar [ngClass]="{ 'server-image-off': item['state']=='off', 'server-image-normal': item['state']=='normal', 'server-image-error': item['state']=='error' }"></div>
-        <mat-card-title>{{ item.name }}</mat-card-title>
-        <mat-card-subtitle>{{ item.url }}</mat-card-subtitle>
+        <mat-card-title>{{ item['name'] }}</mat-card-title>
+        <mat-card-subtitle>{{ item['url'] }}</mat-card-subtitle>
       </mat-card-header>
-      <img *ngIf="item['state']=='normal'" mat-card-image src="assets/images/graph_sample.png" alt="meta-graph">
-      <img *ngIf="item['state']!='normal'" mat-card-image src="assets/images/service_not_available.jpg" alt="service not available">
+      <img *ngIf="item['schema_image'] && item['schema_image'] !== ''" mat-card-image src="{{item['schema_image']}}" alt="schema-graph">
+      <img *ngIf="!item['schema_image'] || item['schema_image'] == ''" mat-card-image src="assets/images/service_not_available.jpg" alt="service not available">
       <mat-card-content>
         <p>
-          <span *ngIf="item['state']=='normal'">{{ parseJdbcUrl(item['datasource']) }}</span><br>
-          <span *ngIf="item['state']=='normal'">{{ item['datasource']['desc'] }}</span><br>
-          <span *ngIf="item['message']">{{ item['message'] }}</span><br>
+          <span>db_name: <b>{{ parseJdbcUrl(item['jdbc_url']) }}</b></span><br>
+          <span>db_description: <b>{{ item['description'] }}</b></span><br>
+          <span>db_user: <b>{{ item['user_name'] }}</b></span><br>
+          <span>db_closed: <b>{{ item['is_closed'] }}</b></span><br>
+          <span>test_time: <b>{{ item['test_time'] }}</b></span><br>
+          <span>connections: <b>{{ item['busy_connections'] ? item['busy_connections'] : 0 }}/{{ item['established_connections'] ? item['established_connections'] : 0 }} {{ item['idle_connections'] ? "(remains "+item['idle_connections']+")" : "" }}</b></span><br>
+          <span>sessions: <b>{{ item['active_sessions'] }}</b></span><br>
         </p>
       </mat-card-content>
       <mat-card-actions>

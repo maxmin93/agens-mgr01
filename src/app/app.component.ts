@@ -16,6 +16,24 @@ import { DeleteItemComponent } from './dialog/delete-item/delete-item.component'
 // ** 코드 참고
 // https://coursetro.com/posts/code/125/Angular-5-Electron-Tutorial
 
+// ** HEALTH DTO class
+// ==> net.bitnine.agensbrowser.bundle.persistence.outer.model.HealthType
+const HEALTH_PROPS = [
+  "product_version",              //: "1.3",
+  "user_name",                    //: "agraph",
+  "established_connections",      //: 5,
+  "idle_connections",             //: 5,
+  "description",                  //: "sample01_graph, labels.size=19 (8/11), relations=11, isDirty=false",
+  "busy_connections",             //: 0,
+  "jdbc_url",                     //: "jdbc:postgresql://27.117.163.21:15602/northwind?ApplicationName=AgensWeb13",
+  "product_name",                 //: "AgensBrowser-web",
+  "test_time",                    //: "2018-11-15 17:57:15",
+  "cp_type",                      //: "hikari",
+  "schema_image",                 //: 
+  "active_sessions",              //: 1,
+  "is_closed",                    //: false
+];
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -195,10 +213,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   updateItem(item:any):Subscription{
     if( !item || !item.url ) return;
 
-    const api = `${item.url}/api/core/schema`;
+    const api = `${item.url}/api/core/health`;
     let info$ = this._http.get<any>(api, {
         headers: new HttpHeaders({ 
-          'Content-Type': 'application/json', 'Authorization': '1234567890' })
+          'Content-Type': 'application/json'})
         })
         .pipe( 
           timeout(1000),
@@ -207,17 +225,21 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             return of([{ group: "schema", state: "off", datasource: undefined,
                         message: `server '${item.name}' is not ready (off)` }]);
           }),
-          concatAll(), 
-          filter(x => x.hasOwnProperty('group') && x['group'] == 'schema')
+          filter(x => x.hasOwnProperty('group') && x['group'] == 'health')
         );
 
     let handler:Subscription = info$.subscribe(x => {
       // console.log( x );
-      item['datasource'] = x.hasOwnProperty('datasource') ? x['datasource'] : undefined;
-      item['message'] = x.hasOwnProperty('message') ? x['message'] : JSON.stringify(x);
-      if( x['state'] == 'SUCCESS' ) item['state'] = 'normal';
-      else if( x['state'] == 'PENDING') item['state'] = 'error';
-      else item['state'] = 'off';
+      HEALTH_PROPS.forEach(k => {
+        item[k] = undefined;
+        if( x.hasOwnProperty(k) ) item[k] = x[k];
+      });
+      // determine state : normal or error
+      if( item['is_closed']==true             // db is closed
+          || item['idle_connections']==0      // not enough connection
+          || !item['test_time'] )             // cannot execute query
+           item['state'] = 'error';
+      else item['state'] = 'normal';
     },
     err => {
       console.log( 'ERROR:', item, err );
@@ -232,11 +254,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     return handler;
   }
 
-  parseJdbcUrl( ds:any ){
-    if( !ds['jdbc_url'] || ds['jdbc_url'].length == 0 ) return '(not available)';
-    let start = ds['jdbc_url'].lastIndexOf('/');
-    let end = ds['jdbc_url'].lastIndexOf('?');
-    let dbName = (start > 0) ? ds['jdbc_url'].substring(start+1, (end > start) ? end : ds['jdbc_url'].length) : ds['jdbc_url'];
-    return dbName + '/' + ds['name'];
+  parseJdbcUrl( jdbc_url:any ){
+    if( !jdbc_url || jdbc_url.length == 0 ) return '(not available)';
+
+    let start = jdbc_url.lastIndexOf('/');
+    let end = jdbc_url.lastIndexOf('?');
+    return (start > 0) ? jdbc_url.substring(start+1, (end > start) ? end : jdbc_url.length) : jdbc_url;
   }
 }
