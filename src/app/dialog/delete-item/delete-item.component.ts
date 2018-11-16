@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
@@ -19,7 +19,7 @@ export class DeleteItemComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<DeleteItemComponent>,
-    private _cd: ChangeDetectorRef,
+    private _ngZone: NgZone,
     @Inject(MAT_DIALOG_DATA) public data: ItemData
   ){
     this.item = data;
@@ -29,13 +29,15 @@ export class DeleteItemComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.dialogRef.close();
-    this._cd.detectChanges();
+    this._ngZone.run(()=>{
+      this.dialogRef.close();
+    });
     console.log("click cancel!!");
   }
   onDelete(): void {
-    this.dialogRef.close( this.item );
-    this._cd.detectChanges();
+    this._ngZone.run(()=>{
+      this.dialogRef.close( this.item );
+    });
     console.log("click delete!!: ", this.item);
   }
 }
