@@ -37,34 +37,39 @@ export class LocalConfigService {
     return this.state$;
   }
 
-  readConfig() {
+  readConfig(callback:Function=undefined) {
 
-    try {
-      if( this.fs.existsSync(config_path) ){
-        // file exists
-        this.fs.readFile( config_path, ( error, data ) => {
-          if ( error ) throw error;
-          this.data = JSON.parse( data );
-          this.state$.next('ready');
-          console.log( this.data );
-        } );
+    if( this.fs ){
+      try {
+        if( this.fs.existsSync(config_path) ){
+          // file exists
+          this.fs.readFile( config_path, ( error, data ) => {
+            if ( error ) throw error;
+            this.data = JSON.parse( data );
+            this.state$.next('ready');
+            console.log( this.data );
+          } );
+        }
+        else{
+          // file not exists
+          this.fs.writeFile( config_path,
+            JSON.stringify( this.data ),
+            "utf-8",
+            (err) => {
+              if (err) throw err
+              this.state$.next('init');
+              console.log("fs: config init!")
+            }
+          );
+        }
+      } catch(err) {
+        console.error(err)
       }
-      else{
-        // file not exists
-        this.fs.writeFile( config_path,
-          JSON.stringify( this.data ),
-          "utf-8",
-          (err) => {
-            if (err) throw err
-            this.state$.next('init');
-            console.log("fs: config init!")
-          }
-        );
-      }
-    } catch(err) {
-      console.error(err)
     }
-
+    else{
+      console.log('ERROR: fs cannot be loding!!', this.data);
+      this.state$.next('test');
+    }
   }  
 
   get(key:string){
@@ -84,6 +89,9 @@ export class LocalConfigService {
           if( callback ) callback();
         }
       );
+    }
+    else{
+      if( callback ) callback();
     }
   }
 }

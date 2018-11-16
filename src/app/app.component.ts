@@ -68,7 +68,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.state$ = this._config.init();
 
     this.state$.subscribe(x => {
-      console.log('config state$:', x);
+      console.log('init state$:', x);
       this.state = x;
       if( x == 'ready' || x == 'test' ){     
         this.timer_curr = this.timer_max;
@@ -140,11 +140,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   openDialogRegister(): void {
     const dialogRef = this.dialog.open(RegisterItemComponent, {
       width: '250px',
-      data: { name: '', url: '', index: this.servers.length }
+      data: { name: '', url: 'http://', index: this.servers.length }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The register dialog was closed:', result);
       if( !result ) return;
       if( result.name == '' || result.url == '' ){
         this.showMessage('WARNING', 'server name or url is empty. try again.');
@@ -155,7 +154,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.servers.push(result);
       this._cd.detectChanges();
 
-      this._config.writeConfig('servers', this.servers, () => this.reloadList() );
+      this._config.writeConfig('servers', this.servers, () => this.updateData() );
       this.showMessage('INFO', `server "${result.name}" was registered.`);
     });
   }
@@ -163,28 +162,29 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   openDialogDelete(item:any): void {
     const dialogRef = this.dialog.open(DeleteItemComponent, {
       width: '250px',
-      data: { name: item.name, url: item.url }
+      data: { name: item['name'], url: item['url'], index: item['index'] }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The delete dialog was closed:', result);
       if( !result ) return;
       this.state = 'loading';
 
-      this.servers.splice(result.index,1);
+      this.servers.splice(result.index, 1);
       this._cd.detectChanges();
 
-      this._config.writeConfig('servers', this.servers, () => this.reloadList() );
+      this._config.writeConfig('servers', this.servers, () => this.updateData() );
       this.showMessage('INFO', `server "${result.name}" was deregistered.`);
     });
   }
 
   launchWindow() {
-    this._electron.shell.openExternal('https://coursetro.com');
+    if( this._electron.shell ) this._electron.shell.openExternal('https://bitnine.net');
+    else this.showMessage('WARNING', `"Open External" API cannot work correctly.`);
   }
 
   connectItem(item:any){
-    this._electron.shell.openExternal(item.url);
+    if( this._electron.shell ) this._electron.shell.openExternal(item.url);
+    else this.showMessage('WARNING', `"Open External" API cannot work correctly.`);
   }
 
   ////////////////////////////////////////////////////////////////
@@ -193,18 +193,23 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeHandlers();
 
     this.title = this._config.get('name');   
-    this.servers = [...this._config.get('servers')];
+    let temp = [...this._config.get('servers')];
 
-    let i = 0;
-    this.servers.forEach(item => {
-      item['index'] = i++;
-      item['datasource'] = { "jdbc_url": '', "name": '', "desc": '', };
-      item['message'] = "";
+    temp.forEach( (item, index) => {
+      item['index'] = index;
+      item['jdbc_url'] = '(unknown)';
+      item['description'] = "";
       item['state'] = 'off';
-
-      this.handlers_health.push( this.updateItem(item) );
     });
 
+    this.servers = [...temp];
+    this.state = 'ready';
+    this._cd.detectChanges();
+
+    this.servers.forEach(item => {
+      this.handlers_health.push( this.updateItem(item) );
+    });
+    
     // Promise.resolve(null).then(()=>{
     //   this.showMessage('DONE', `loading server list (size=${this.servers.length})`);
     // });    
@@ -221,21 +226,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         .pipe( 
           timeout(1000),
           catchError(e => {
+            // console.log("catchError: ", e);
             // 서버 무응답 ==> status: 0, statusText: "Unknown Error"
-            return of([{ group: "schema", state: "off", datasource: undefined,
-                        message: `server '${item.name}' is not ready (off)` }]);
+            return of({ group: "health", state: "off", jdbc_url: '(ERR_CONNECTION)',
+                          description: `server '${item.name}' is not ready (off)` });
           }),
           filter(x => x.hasOwnProperty('group') && x['group'] == 'health')
         );
 
     let handler:Subscription = info$.subscribe(x => {
-      // console.log( x );
       HEALTH_PROPS.forEach(k => {
         item[k] = undefined;
         if( x.hasOwnProperty(k) ) item[k] = x[k];
       });
       // determine state : normal or error
-      if( item['is_closed']==true             // db is closed
+      if( item['jdbc_url'] == '(ERR_CONNECTION)' ) item['state'] = 'off';
+      else if( item['is_closed']==true             // db is closed
           || item['idle_connections']==0      // not enough connection
           || !item['test_time'] )             // cannot execute query
            item['state'] = 'error';
@@ -243,8 +249,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     },
     err => {
       console.log( 'ERROR:', item, err );
-      item['datasource'] = undefined;
-      item['message'] = `ERROR: ${err.message}`;
+      item['jdbc_url'] = '(ERR_CONNECTION)';
+      item['description'] = `ERROR: ${err.message}`;
       item['state'] = 'off';
     },
     () => {

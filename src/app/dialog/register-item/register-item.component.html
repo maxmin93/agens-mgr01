@@ -3,12 +3,18 @@
   <p>Type name and url of new server.</p>
   <mat-form-field>
     <input matInput placeholder="server name" [(ngModel)]="data.name" required>
+    <button mat-button *ngIf="data.name" matSuffix mat-icon-button aria-label="Clear" (click)="data.name=''">
+      <mat-icon>close</mat-icon>
+    </button>
   </mat-form-field>
   <mat-form-field>
     <input matInput placeholder="server url" [(ngModel)]="data.url" required>
+    <button mat-button *ngIf="data.url" matSuffix mat-icon-button aria-label="Clear" (click)="data.url='http://'">
+      <mat-icon>close</mat-icon>
+    </button>    
   </mat-form-field>
 </div>
 <div mat-dialog-actions>
-  <button mat-button [mat-dialog-close]="data" cdkFocusInitial>Register</button>
-  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-button (click)="onRegister()" cdkFocusInitial>Register</button>
+  <button mat-button (click)="onCancel()">Cancel</button>
 </div>

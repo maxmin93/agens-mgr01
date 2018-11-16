@@ -25,7 +25,10 @@
       <img *ngIf="item['schema_image'] && item['schema_image'] !== ''" mat-card-image src="{{item['schema_image']}}" alt="schema-graph">
       <img *ngIf="!item['schema_image'] || item['schema_image'] == ''" mat-card-image src="assets/images/service_not_available.jpg" alt="service not available">
       <mat-card-content>
-        <p>
+        <p *ngIf="item['state']=='off'">
+          <span>{{ item['description'] }}</span>
+        </p>
+        <p *ngIf="item['state']!='off'">
           <span>db_name: <b>{{ parseJdbcUrl(item['jdbc_url']) }}</b></span><br>
           <span>db_description: <b>{{ item['description'] }}</b></span><br>
           <span>db_user: <b>{{ item['user_name'] }}</b></span><br>

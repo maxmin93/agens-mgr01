@@ -15,16 +15,22 @@ export interface ItemData {
 })
 export class DeleteItemComponent implements OnInit {
 
+  item:ItemData = undefined;
+
   constructor(
     public dialogRef: MatDialogRef<DeleteItemComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ItemData
   ){
+    this.item = data;
   }
 
   ngOnInit() {
   }
 
-  onNoClick(): void {
+  onCancel(): void {
     this.dialogRef.close();
+  }
+  onDelete(): void {
+    this.dialogRef.close( this.item );
   }
 }
