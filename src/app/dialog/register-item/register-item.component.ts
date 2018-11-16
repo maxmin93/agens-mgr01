@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
@@ -19,6 +19,7 @@ export class RegisterItemComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<RegisterItemComponent>,
+    private _cd: ChangeDetectorRef,
     @Inject(MAT_DIALOG_DATA) public data: ItemData
   ){
     this.item = data;
