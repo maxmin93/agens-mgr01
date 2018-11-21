@@ -62,7 +62,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private _http: HttpClient,
     private _msg: MatSnackBar,
     public dialog: MatDialog
-  ) {}   // DI
+  ) {
+  }   // DI
 
   ngOnInit(){
     this.state$ = this._config.init();

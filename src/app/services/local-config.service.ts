@@ -1,15 +1,20 @@
 import { Injectable } from '@angular/core';
+
+import { ElectronService } from 'ngx-electron';
 import { FsService } from 'ngx-fs';
 
 import { Observable, Subject } from 'rxjs';
 
-const config_path = './agens-manager.json';
+const config_name = 'agens-manager.json';
+declare var userPath: Function;
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class LocalConfigService {
 
+  config_path: string;
   state$:Subject<string> = new Subject();
   data: any = { "name": 'agens-manager01'
               , "servers": [
@@ -19,8 +24,14 @@ export class LocalConfigService {
   fs: any;
 
   constructor(
+    private _electron: ElectronService,
     private _fsService: FsService
   ) { 
+    if( this._electron.remote.app.getPath('userData') )
+      this.config_path = this._electron.remote.app.getPath('userData') + '/' + config_name;
+    else this.config_path = './' + config_name;
+    console.log( 'configPath:', this.config_path );
+
     // if run by `ng serve`, fs is null (because not run by nodejs)
     this.fs = this._fsService.fs;
     // the _FsService contents is described here https://nodejs.org/api/fs.html
@@ -41,9 +52,9 @@ export class LocalConfigService {
 
     if( this.fs ){
       try {
-        if( this.fs.existsSync(config_path) ){
+        if( this.fs.existsSync(this.config_path) ){
           // file exists
-          this.fs.readFile( config_path, ( error, data ) => {
+          this.fs.readFile( this.config_path, ( error, data ) => {
             if ( error ) throw error;
             this.data = JSON.parse( data );
             this.state$.next('ready');
@@ -52,7 +63,7 @@ export class LocalConfigService {
         }
         else{
           // file not exists
-          this.fs.writeFile( config_path,
+          this.fs.writeFile( this.config_path,
             JSON.stringify( this.data ),
             "utf-8",
             (err) => {
@@ -80,7 +91,7 @@ export class LocalConfigService {
   writeConfig(key:string, val:any, callback:Function = undefined){
     this.data[key] = val;
     if( this.fs ){
-      this.fs.writeFile( config_path, JSON.stringify( this.data ), "utf-8",
+      this.fs.writeFile( this.config_path, JSON.stringify( this.data ), "utf-8",
         (err) => {
           if (err) throw err
           this.state$.next('saved');

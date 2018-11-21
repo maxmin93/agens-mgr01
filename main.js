@@ -1,4 +1,4 @@
-const {app, BrowserWindow} = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const url = require('url');
 
@@ -9,6 +9,8 @@ function createWindow () {
     width: 700, 
     height: 800,
   });
+
+  console.log( 'app.getPath=', app.getPath('userData') );
 
   // load the dist folder from Angular
   win.loadURL(url.format({
@@ -23,6 +25,10 @@ function createWindow () {
   win.on('closed', () => {
     win = null;
   });
+}
+
+function userPath() {
+  return app.getPath('userData');
 }
 
 app.on('ready', createWindow);
