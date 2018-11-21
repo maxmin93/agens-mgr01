@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, Inject, OnInit, NgZone } from '@angular/core';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
@@ -19,7 +19,7 @@ export class RegisterItemComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<RegisterItemComponent>,
-    private _cd: ChangeDetectorRef,
+    private _ngZone: NgZone,
     @Inject(MAT_DIALOG_DATA) public data: ItemData
   ){
     this.item = data;
@@ -29,9 +29,13 @@ export class RegisterItemComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    this._ngZone.run(()=>{
+      this.dialogRef.close();
+    });
   }
   onRegister(): void {
-    this.dialogRef.close( this.item );
+    this._ngZone.run(()=>{
+      this.dialogRef.close( this.item );
+    });
   }
 }
